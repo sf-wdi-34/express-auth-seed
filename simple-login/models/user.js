@@ -3,9 +3,30 @@ var mongoose = require('mongoose'),
   bcrypt = require('bcrypt');
 
 var UserSchema = new Schema({
-  email: String,
+  email: {
+    type: String,
+    // http://mongoosejs.com/docs/validation.html
+    required: true,
+    validate: {
+          validator: uniqueEmailValidator,
+          message: 'email must be unique'
+    }
+  },
   passwordDigest: String
 });
+
+// ensure unique email
+function uniqueEmailValidator(email, cb) {
+  User.findOne({ email: email }, function (err, foundUser) {
+    if(foundUser) {       // there is already a user with this email
+      return cb(false);     // not valid!
+    } else {              // no user with this email
+      return cb(true);      // valid!
+    }
+  });
+}
+// User.schema.path('email').validate(, 'This email address is already registered');
+
 
 UserSchema.statics.createSecure = function (email, password, callback) {
   // `this` references our user model, since this function will be called from the model itself
